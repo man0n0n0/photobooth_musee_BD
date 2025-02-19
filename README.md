@@ -45,7 +45,11 @@ The following material is a special commition for "le mus√©e de la bande-dessin√
 
 ```
 sudo apt-get install python3-opencv
-
 ```
-- numpy
+- numpy (automatic install as a opencv dependances)
+
+
+![dafoe](https://media.giphy.com/media/Zy7s96dP38MlQe3OjG/giphy.gif?cid=790b7611megzlvs342chq32l7gs4gzhnlufd8y69tkksz9j2&ep=v1_gifs_search&rid=giphy.gif&ct=g)
+
+
 

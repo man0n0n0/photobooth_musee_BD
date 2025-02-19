@@ -49,7 +49,7 @@ sudo apt-get install python3-opencv
 - numpy (automatic install as a opencv dependances)
 
 
-![dafoe](https://media.giphy.com/media/Zy7s96dP38MlQe3OjG/giphy.gif?cid=790b7611megzlvs342chq32l7gs4gzhnlufd8y69tkksz9j2&ep=v1_gifs_search&rid=giphy.gif&ct=g)
+![dafoe](https://media.giphy.com/media/d11j4By0L4cdxQbo3X/giphy.gif?cid=ecf05e47y88zsv09eweeo3my53ffhrpw8gr8f0hckf7v34o2&ep=v1_gifs_search&rid=giphy.gif&ct=g)
 
 
 

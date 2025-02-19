@@ -2,7 +2,7 @@
 The following material is a special commition for "le musée de la bande-dessinée", brussels in the context of a early march exhibiton about the comics-streap mean of production 
 
 # specification
-L'idée est que les visiteurs de l'expo prennent place sur un spot au
+>> L'idée est que les visiteurs de l'expo prennent place sur un spot au
 >> sol, et que leur visage apparaisse à l'endroit d'un dessin (et non une
 >> photo comme dans le test). Le script final devrait comme évoqué tourner
 >> sur Raspberry pi (ou équivalent). Une amélioration serait que le dessin

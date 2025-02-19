@@ -29,12 +29,12 @@ def detect_and_track_faces(frame, face_cascade, img_coordonate, current_backgrou
         face = frame[y:y+h, x:x+w]
         center = x + w//2, y + h//2
         radius = max(w,h)//2
-        cv2.circle(frame, center, radius, (0,0,0), 1)
+        #cv2.circle(frame, center, radius, (0,0,0), 1)
         
         # Redimensionnement et masquage circulaire
         face_resized = cv2.resize(face, (150, 150))
         mask = np.zeros((150, 150), dtype=np.uint8)
-        cv2.circle(mask, (75, 75), 75, 255, -1)
+        cv2.circle(mask, (95, 75), 75, 255, -1)
         face_circular = cv2.bitwise_and(face_resized, face_resized, mask=mask)
         
         # Placement sur le fond
@@ -58,7 +58,7 @@ def main():
     current_background = cv2.resize(background.copy(), (1080, 1920))
     
     # Configuration des coordonnées
-    img_coordonate = {'img1x': 50, 'img1y': 50}
+    img_coordonate = {'img1x': 550, 'img1y': 550}
     
     # Capture vidéo
     cap = cv2.VideoCapture(0)

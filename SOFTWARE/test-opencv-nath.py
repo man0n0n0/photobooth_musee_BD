@@ -1,5 +1,7 @@
 import cv2
 import numpy as np
+import random
+import os
 
 def get_random_background(background_folder):
     """Get a random image from the specified folder."""
@@ -20,34 +22,20 @@ def get_random_background(background_folder):
     selected_image = random.choice(image_files)
     return selected_image
 
-
-
 def main():
 
     face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
 
     #background = cv2.imread("dafoe.jpg")
-    background = get_random_background("background")
+    background = cv2.imread(get_random_background("background"))
 
     copy_background = background.copy()
     current_background = background.copy()
 
+    current_background = cv2.resize(copy_background, (1080, 1920), interpolation = cv2.INTER_LINEAR)
 
-    scale_up = 0.5
-     
-    # current_background = cv2.resize(copy_background, None, fx= scale_up, fy= scale_up, interpolation= cv2.INTER_LINEAR)
-
-    img_coordonate = {}
-
-    # Detect bg visage -- to delete
-    pin_faces = face_cascade.detectMultiScale(current_background, 1.3, 5)
-
-    img_coordinates = {}
-    for (x, y, w, h) in pin_faces:
-        img_coordonate['img1x'] = x
-        img_coordonate['img1y'] = y
-        
-        print(img_coordonate['img1x'],img_coordonate['img1y'] )
+    img_coordonate = { 'img1x': 50, 'img1y': 50 }
+    print(img_coordonate['img1x'],img_coordonate['img1y'] )
 
 
     cap = cv2.VideoCapture(0)
@@ -75,7 +63,6 @@ def main():
 
         cv2.namedWindow("image", cv2.WND_PROP_FULLSCREEN)
         cv2.setWindowProperty("image",cv2.WND_PROP_FULLSCREEN,cv2.WINDOW_FULLSCREEN)
-        cv2.resizeWindow("image", 1270, 720)
 
         cv2.imshow("image", current_background)
         if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -83,3 +70,5 @@ def main():
 
     cap.release()
     cv2.destroyAllWindows()
+
+main()

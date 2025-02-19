@@ -21,7 +21,7 @@ The following material is a special commition for "le musée de la bande-dessin�
 >> l'image, changement d'image sans que ça saute dans tous les sens dès
 >> qu'on bouge, etc.).
 
-#Ressources
+# Ressources
 ## Modèle de détection facial
 - [shape_predictor_68_face_landmarks.dat](https://github.com/italojs/facial-landmarks-recognition/blob/master/shape_predictor_68_face_landmarks.dat)
 - [haarcascade_frontalface_default.xml](https://github.com/kipr/opencv/blob/master/data/haarcascades/haarcascade_frontalface_default.xml)
@@ -38,4 +38,9 @@ The following material is a special commition for "le musée de la bande-dessin�
 - RAZER webcam 
 - micro-HDMI to HDMI adapter
 - **to determine** TV
+
+# Lib
+
+- OpenCV
+- numpy
 

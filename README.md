@@ -21,6 +21,13 @@ The following material is a special commition for "le musée de la bande-dessin�
 >> l'image, changement d'image sans que ça saute dans tous les sens dès
 >> qu'on bouge, etc.).
 
+#Ressources
+## Modèle de détection facial
+- [shape_predictor_68_face_landmarks.dat](https://github.com/italojs/facial-landmarks-recognition/blob/master/shape_predictor_68_face_landmarks.dat)
+- [haarcascade_frontalface_default.xml](https://github.com/kipr/opencv/blob/master/data/haarcascades/haarcascade_frontalface_default.xml)
+## Tuto
+- [Face Swapping Open CV - Dlib](https://www.youtube.com/watch?v=dK-KxuPi768&t=260s)
+
 # procedure of activation 
 
 **to determine**

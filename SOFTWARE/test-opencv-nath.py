@@ -31,28 +31,43 @@ def detect_and_track_faces(frame, face_cascade, img_coordonate, current_backgrou
     for (x, y, w, h) in faces:
         face = frame[y:y+h, x:x+w]
         center = x + w//2, y + h//2
-        radius = max(w,h)//2
-
-        #creating circled face
-        mask = np.zeros((max(w,h),max(w,h)), dtype=np.uint8)
-        cv2.circle(mask, (max(w,h)//2,max(w,h)//2), radius, 255, -1)
-        face_circular = cv2.bitwise_and(face, face, mask=mask)
         
-        # resizing frame and mask
+        # Création du masque elliptique au lieu du cercle
+        mask = np.zeros((max(w,h),max(w,h)), dtype=np.uint8)
+        # Utilisation de cv2.ellipse avec l'axe majeur=w et mineur=h/2
+        cv2.ellipse(
+            mask,
+            (max(w,h)//2, max(w,h)//2),
+            (w//3, h//2),  # Axe majeur=w/2, axe mineur=h/4
+            0,  # Pas d'angle de rotation
+            0,  # Angle de début
+            360,  # Angle de fin
+            255,  # Couleur blanche pour le masque
+            -1   # Épaisseur -1 pour remplir l'ellipse
+        )
+        face_elliptical = cv2.bitwise_and(face, face, mask=mask)
+        
+       
+
+        
+        # Redimensionnement
         resized_dia = int(current_background.shape[0]*img_coordonate['face_ratio'])
-        face_circular = cv2.resize(face_circular,(resized_dia,resized_dia))
+        face_elliptical = cv2.resize(face_elliptical,(resized_dia,resized_dia))
         mask = cv2.resize(mask,(resized_dia,resized_dia))
 
-        #placing over the background
-        bg_x = int(img_coordonate['x_faceplacement']*current_background.shape[1]-face_circular.shape[1])
-        bg_y = int(img_coordonate['y_faceplacement']*current_background.shape[0]-face_circular.shape[0])
+        # Placement sur l'arrière-plan
+        bg_x = int(img_coordonate['x_faceplacement']*current_background.shape[1]-face_elliptical.shape[1])
+        bg_y = int(img_coordonate['y_faceplacement']*current_background.shape[0]-face_elliptical.shape[0])
 
-        if bg_y+face_circular.shape[0] < current_background.shape[0] and bg_x+face_circular.shape[1] < current_background.shape[1]:
-            region = current_background[bg_y:bg_y+int(face_circular.shape[0]), bg_x:bg_x+face_circular.shape[1]]
+        if bg_y+face_elliptical.shape[0] < current_background.shape[0] and bg_x+face_elliptical.shape[1] < current_background.shape[1]:
+            region = current_background[bg_y:bg_y+int(face_elliptical.shape[0]), bg_x:bg_x+int(face_elliptical.shape[1])]
             result = cv2.bitwise_and(region, region, mask=cv2.bitwise_not(mask))
-            result = cv2.add(result, face_circular)
-            current_background[bg_y:bg_y+int(face_circular.shape[0]), bg_x:bg_x+int(face_circular.shape[1])] = result
+            result = cv2.add(result, face_elliptical)
+            current_background[bg_y:bg_y+int(face_elliptical.shape[0]), bg_x:bg_x+int(face_elliptical.shape[1])] = result
+        
+        cv2.imshow("mask", result)
 
+    
     return frame, current_background
 
 def main():

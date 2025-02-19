@@ -1,5 +1,5 @@
 # overall description
-The following material is a special commition for Stephan Noel and le musée de la bande-dessinée for an early march exhibiton about the comics-streap mean of production 
+The following material is a special commition for le musée de la bande-dessinée for an early march exhibiton about the comics-streap mean of production 
 
 # bom
 - raspberrypi > 3+ 

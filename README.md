@@ -42,5 +42,10 @@ The following material is a special commition for "le mus√©e de la bande-dessin√
 # Lib
 
 - OpenCV
+
+```
+sudo apt-get install python3-opencv
+
+```
 - numpy
 

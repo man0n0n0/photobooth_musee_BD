@@ -2,7 +2,8 @@
 The following material is a special commition for "le musée de la bande-dessinée", brussels in the context of a early march exhibiton about the comics-streap mean of production 
 
 # todo
-- face smooth integration 
+- face smooth integration
+- raspberrypi speed optimisation 
 - opencv_process cleaning (not mandatory)
 
 # specification

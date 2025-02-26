@@ -2,7 +2,6 @@ import cv2
 import os
 import random
 
-
 # definir les references de placement des visages pour chaque image d'arrière plan (dans le dossier background)
 background_refs = {
     "dafoe.jpg" : {

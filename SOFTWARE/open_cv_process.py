@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 
 def detect_and_track_faces(frame, face_cascade, img_coordonate, background):
+    
     """Détection et suivi des visages."""
     #backgorund operation
     current_background = cv2.resize(background, (1080, 1920))
@@ -16,6 +17,7 @@ def detect_and_track_faces(frame, face_cascade, img_coordonate, background):
         
         # Création du masque elliptique au lieu du cercle
         mask = np.zeros((max(w,h),max(w,h)), dtype=np.uint8)
+
         # Utilisation de cv2.ellipse avec l'axe majeur=w et mineur=h/2
         cv2.ellipse(
             mask,
@@ -35,8 +37,8 @@ def detect_and_track_faces(frame, face_cascade, img_coordonate, background):
         mask = cv2.resize(mask,(resized_dia,resized_dia))
 
         # Placement sur l'arrière-plan
-        bg_x = int(img_coordonate['x_faceplacement']*current_background.shape[1]-face_elliptical.shape[1])
-        bg_y = int(img_coordonate['y_faceplacement']*current_background.shape[0]-face_elliptical.shape[0])
+        bg_x = int(img_coordonate['x_faceplacement']*current_background.shape[1]-face_elliptical.shape[1]//2)
+        bg_y = int(img_coordonate['y_faceplacement']*current_background.shape[0]-face_elliptical.shape[0]//2)
 
         if bg_y+face_elliptical.shape[0] < current_background.shape[0] and bg_x+face_elliptical.shape[1] < current_background.shape[1]:
             region = current_background[bg_y:bg_y+int(face_elliptical.shape[0]), bg_x:bg_x+int(face_elliptical.shape[1])]

@@ -18,6 +18,7 @@ def main():
     
     while True:
         ret, frame = cap.read()
+        #add timer that change selected backgorund each n sec
         frame, image = detect_and_track_faces(frame, face_cascade, background_ref, background)
         cv2.imshow("image", image)
         if cv2.waitKey(1) & 0xFF == ord('q'):

@@ -1,17 +1,22 @@
 import cv2
 import numpy as np
 
+background_size = (1080, 1920)
+
 def detect_and_track_faces(frame, face_cascade, img_coordonate, background):
     
     """Détection et suivi des visages."""
-    #backgorund operation
-    current_background = cv2.resize(background, (1080, 1920))
+    #wainting background
+    waiter = cv2.resize(cv2.imread(f"background/waiting.jpg"),background_size)
+    current_background = waiter
 
     # Conversion en gris
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     faces = face_cascade.detectMultiScale(gray, 1.3, 5)
     
     for (x, y, w, h) in faces:
+        current_background = cv2.resize(background, background_size)
+
         face = frame[y:y+h, x:x+w]
         center = x + w//2, y + h//2
         
@@ -45,8 +50,5 @@ def detect_and_track_faces(frame, face_cascade, img_coordonate, background):
             result = cv2.bitwise_and(region, region, mask=cv2.bitwise_not(mask))
             result = cv2.add(result, face_elliptical)
             current_background[bg_y:bg_y+int(face_elliptical.shape[0]), bg_x:bg_x+int(face_elliptical.shape[1])] = result
-        
-        cv2.imshow("mask", result)
-
     
     return frame, current_background

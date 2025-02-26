@@ -1,5 +1,6 @@
 import os
 import cv2
+import time
 from open_cv_process import detect_and_track_faces
 from background_management import get_random_background
 
@@ -17,8 +18,8 @@ def main():
     
     while True:
         ret, frame = cap.read()
-        frame, current_background = detect_and_track_faces(frame, face_cascade, background_ref, background)
-        cv2.imshow("image", current_background)
+        frame, image = detect_and_track_faces(frame, face_cascade, background_ref, background)
+        cv2.imshow("image", image)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 

@@ -3,8 +3,8 @@ import numpy as np
 
 background_size = (1920, 1080)
 
-# pour ecran erg #tiktokisation du monde #tryptic #panel
-# background_size = (1080, 1920)
+#  pour ecran erg #tiktokisation du monde #tryptic #panel
+#  background_size = (1080, 1920)
 
 
 def detect_and_track_faces(frame, face_cascade, img_coordonate, background):

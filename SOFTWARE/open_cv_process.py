@@ -1,7 +1,11 @@
 import cv2
 import numpy as np
 
-background_size = (1080, 1920)
+background_size = (1920, 1080)
+
+# pour ecran erg #tiktokisation du monde #tryptic #panel
+# background_size = (1080, 1920)
+
 
 def detect_and_track_faces(frame, face_cascade, img_coordonate, background):
     
@@ -40,6 +44,11 @@ def detect_and_track_faces(frame, face_cascade, img_coordonate, background):
         resized_dia = int(output.shape[0]*img_coordonate['face_ratio'])
         face_elliptical = cv2.resize(face_elliptical,(resized_dia,resized_dia))
         mask = cv2.resize(mask,(resized_dia,resized_dia))
+        contours, heirarchy = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        
+        cv2.drawContours(mask, contours, -1, (0,0,0), 1)
+
+
 
         # Placement sur l'arrière-plan
         bg_x = int(img_coordonate['x_faceplacement']*output.shape[1]-face_elliptical.shape[1]//2)

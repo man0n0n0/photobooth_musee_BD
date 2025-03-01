@@ -19,6 +19,11 @@ background_refs = {
     "y_faceplacement" : 0.5,
     "face_ratio" : 0.15
     },
+    "waiting.jpg" : {
+    "x_faceplacement" : 0.8,
+    "y_faceplacement" : 0.1,
+    "face_ratio" : 0.6
+    }
 } 
 
 def get_random_background(background_folder):

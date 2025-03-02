@@ -3,20 +3,36 @@ import numpy as np
 
 background_size = (1920, 1080)
 
-#  pour ecran erg #tiktokisation du monde #tryptic #panel
-#  background_size = (1080, 1920)
-
+# Configuration de la zone à exclure (ajouté)
+EXCLUSION_ZONE = {
+    'x': 100,    # Position X de la zone à exclure
+    'y': 100,    # Position Y de la zone à exclure
+    'w': 200,    # Largeur de la zone à exclure
+    'h': 200     # Hauteur de la zone à exclure
+}
 
 def detect_and_track_faces(frame, face_cascade, img_coordonate, background):
-    
     """Détection et suivi des visages."""
     #output waiting background
-    waiter = cv2.resize(cv2.imread(f"background/waiting.jpg"),background_size)
+    waiter = cv2.resize(cv2.imread(f"background/waiting.jpg"), background_size)
     output = waiter
 
     # Conversion en gris
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    faces = face_cascade.detectMultiScale(gray, 1.3, 5)
+    
+    # Création d'un masque pour exclure la zone
+    mask = np.ones(gray.shape, dtype=np.uint8) * 255
+    cv2.rectangle(mask, 
+                 (EXCLUSION_ZONE['x'], EXCLUSION_ZONE['y']), 
+                 (EXCLUSION_ZONE['x'] + EXCLUSION_ZONE['w'], 
+                  EXCLUSION_ZONE['y'] + EXCLUSION_ZONE['h']), 
+                 0, -1)
+    
+    # Appliquer le masque à l'image en gris
+    gray_masked = cv2.bitwise_and(gray, gray, mask=mask)
+    
+    # Détecter les visages sur l'image masquée
+    faces = face_cascade.detectMultiScale(gray_masked, 1.3, 5)
     
     for (x, y, w, h) in faces:
         output = cv2.resize(background, background_size)
@@ -38,17 +54,16 @@ def detect_and_track_faces(frame, face_cascade, img_coordonate, background):
             255,  # Couleur blanche pour le masque
             -1   # Épaisseur -1 pour remplir l'ellipse
         )
+        
         face_elliptical = cv2.bitwise_and(face, face, mask=mask)
         
         # Redimensionnement
         resized_dia = int(output.shape[0]*img_coordonate['face_ratio'])
-        face_elliptical = cv2.resize(face_elliptical,(resized_dia,resized_dia))
+        face_elliptical = cv2.resize(face_elliptical, (resized_dia, resized_dia), 
+                           interpolation=cv2.INTER_CUBIC)
         mask = cv2.resize(mask,(resized_dia,resized_dia))
-        contours, heirarchy = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-        
+        contours, heirarchy = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         cv2.drawContours(mask, contours, -1, (0,0,0), 1)
-
-
 
         # Placement sur l'arrière-plan
         bg_x = int(img_coordonate['x_faceplacement']*output.shape[1]-face_elliptical.shape[1]//2)
@@ -59,6 +74,5 @@ def detect_and_track_faces(frame, face_cascade, img_coordonate, background):
         result = cv2.bitwise_and(region, region, mask=cv2.bitwise_not(mask))
         result = cv2.add(result, face_elliptical)
         output[bg_y:bg_y+int(face_elliptical.shape[0]), bg_x:bg_x+int(face_elliptical.shape[1])] = result
-
 
     return frame, output

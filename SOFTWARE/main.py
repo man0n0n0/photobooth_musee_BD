@@ -5,7 +5,6 @@ from open_cv_process import detect_and_track_faces
 from background_management import get_random_background
 from text_overlay import add_text_to_image  # Importer la fonction
 
-
 background_refresh_time = 5
 
 def main():
@@ -44,12 +43,13 @@ def main():
             thickness=1
         )
 
-        cv2.namedWindow("result", cv2.WND_PROP_FULLSCREEN)
-        cv2.setWindowProperty("result", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
-        cv2.resizeWindow("result", 1920, 1080)
+        ### I propose that we doesn't work in full screen while we don't have the final material devices 
+        #cv2.namedWindow("result", cv2.WND_PROP_FULLSCREEN)
+        #cv2.setWindowProperty("result", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+        #cv2.resizeWindow("result", 1920, 1080)
         cv2.imshow("result", image)
         
-        if cv2.waitKey(1) & 0xFF == ord('q'):
+        if cv2.waitKey(10) & 0xFF == ord('q'):
             break
 
     cap.release()

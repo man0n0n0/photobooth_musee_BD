@@ -16,9 +16,11 @@ def detect_and_track_faces(frame, face_cascade, img_coordonate, background):
     #output waiting background
     waiter = cv2.resize(cv2.imread(f"background/waiting.jpg"), background_size)
     output = waiter
+    frame_copy = frame.copy()
+    frame_copy = cv2.blur(frame_copy, (27, 27))
 
     # Conversion en gris
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    gray = cv2.cvtColor(frame_copy, cv2.COLOR_BGR2GRAY)
     
     # Création d'un masque pour exclure la zone
     mask = np.ones(gray.shape, dtype=np.uint8) * 255

@@ -20,11 +20,13 @@ def main():
     # timer init
     start_t = time.time()
 
-    # video capture
+    # video captureq
     cap = cv2.VideoCapture(0)
     
     while True:
         ret, frame = cap.read()
+        frame_copy = frame.copy()
+
 
         #background refreshing part
         if time.time() - start_t > background_refresh_time :

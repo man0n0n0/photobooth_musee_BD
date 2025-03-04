@@ -46,9 +46,9 @@ def main():
             thickness=1
         )
 
-        cv2.namedWindow("result", cv2.WND_PROP_FULLSCREEN)
-        cv2.setWindowProperty("result", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
-        cv2.resizeWindow("result", 1920, 1080)
+#         cv2.namedWindow("result", cv2.WND_PROP_FULLSCREEN)
+#         cv2.setWindowProperty("result", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+#         cv2.resizeWindow("result", 1920, 1080)
         cv2.imshow("result", image)
         
         if cv2.waitKey(1) & 0xFF == ord('q'):

@@ -65,7 +65,7 @@ def detect_and_track_faces(frame, face_cascade, img_coordonate, background):
                            interpolation=cv2.INTER_CUBIC)
         mask = cv2.resize(mask,(resized_dia,resized_dia))
         contours, heirarchy = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        cv2.drawContours(mask, contours, -1, (0,0,0), 1)
+        cv2.drawContours(mask, contours, -1, (0,255,0), 1)
 
         # Placement sur l'arrière-plan
         bg_x = int(img_coordonate['x_faceplacement']*output.shape[1]-face_elliptical.shape[1]//2)
@@ -76,5 +76,7 @@ def detect_and_track_faces(frame, face_cascade, img_coordonate, background):
         result = cv2.bitwise_and(region, region, mask=cv2.bitwise_not(mask))
         result = cv2.add(result, face_elliptical)
         output[bg_y:bg_y+int(face_elliptical.shape[0]), bg_x:bg_x+int(face_elliptical.shape[1])] = result
-
+        
+        
+        cv2.imshow("elicitp", mask)
     return frame, output

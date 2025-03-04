@@ -30,7 +30,6 @@ while True:
         start_t = time.time()
     
     ret, frame = cap.read()
-    frame = cv2.resize(frame, None, fx=0.9, fy=0.9)
     frame_copy = frame.copy()
     height, width, _ = frame.shape
     landmarks = fl.get_facial_landmarks(frame)
@@ -44,7 +43,7 @@ while True:
     frame_copy = cv2.blur(frame_copy, (27, 27))
     face_extracted = cv2.bitwise_and(frame_copy,frame_copy, mask=mask)
 
-    blurred_face = cv2.GaussianBlur(face_extracted, (0, 0), sigmaX=5.0)
+    blurred_face = cv2.GaussianBlur(face_extracted, (0, 0), sigmaX=0.0)
 
     # Créer une image finale avec le fond choisi
     output = cv2.resize(background, background_size)

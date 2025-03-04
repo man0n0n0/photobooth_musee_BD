@@ -49,7 +49,7 @@ def main():
         #cv2.resizeWindow("result", 1920, 1080)
         cv2.imshow("result", image)
         
-        if cv2.waitKey(10) & 0xFF == ord('q'):
+        if cv2.waitKey(100) & 0xFF == ord('q'):
             break
 
     cap.release()

@@ -1,7 +1,8 @@
 import cv2
 import numpy as np
+import skimage.exposure
 
-background_size = (1080,1920)
+background_size = (720,1280)
 
 # Configuration de la zone à exclure (ajouté)
 EXCLUSION_ZONE = {
@@ -11,7 +12,7 @@ EXCLUSION_ZONE = {
     'h': 200     # Hauteur de la zone à exclure
 }
 
-def contour_fade(face, mask, blur_amount=200):
+def contour_fade(face, mask, blur_amount=100000):
     """
     Create a smooth fade effect around the edges of the face mask.
     
@@ -26,8 +27,14 @@ def contour_fade(face, mask, blur_amount=200):
     # Create a copy of the mask for blurring
     mask_blur = mask.copy()
     
-    # Apply Gaussian blur to create a gradient
-    mask_blur = cv2.GaussianBlur(mask_blur, (blur_amount, blur_amount), 0)
+
+    # Apply Gaussian blur to create a thin gradient
+    mask_blur = cv2.GaussianBlur(mask_blur, (blur_amount, blur_amount), sigmaX=100, sigmaY=50, borderType = cv2.BORDER_CONSTANT)
+   
+    #Smoothing edge 
+    mask_blur = skimage.exposure.rescale_intensity(mask_blur, in_range=(127.5,255), out_range=(0,255))
+
+    # Print check
     cv2.imshow("mask",mask_blur)
 
     # Convert to float32 and normalize to 0-1 range for alpha blending

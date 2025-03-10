@@ -7,17 +7,17 @@ background_refs = {
     "dafoe.jpg" : {
     "x_faceplacement" : 0.2,
     "y_faceplacement" : 0.5,
-    "face_ratio" : 0.15
+    "face_ratio" : 0.2
     },
     "koons.jpg" : {
     "x_faceplacement" : 0.6,
     "y_faceplacement" : 0.75,
-    "face_ratio" : 0.22
+    "face_ratio" : 0.25
     },
     "predatwink.jpg" : {
     "x_faceplacement" : 0.45,
     "y_faceplacement" : 0.5,
-    "face_ratio" : 0.15
+    "face_ratio" : 0.25
     },
     "waiting.jpg" : {
     "x_faceplacement" : 0.8,

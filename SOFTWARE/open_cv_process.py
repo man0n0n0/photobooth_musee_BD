@@ -27,7 +27,6 @@ def contour_fade(face, mask, blur_amount=100000):
     # Create a copy of the mask for blurring
     mask_blur = mask.copy()
     
-
     # Apply Gaussian blur to create a thin gradient
     mask_blur = cv2.GaussianBlur(mask_blur, (blur_amount, blur_amount), sigmaX=100, sigmaY=50, borderType = cv2.BORDER_CONSTANT)
    
@@ -79,39 +78,70 @@ def detect_and_track_faces(frame, face_cascade, img_coordonate, background):
     for (x, y, w, h) in faces:
         output = cv2.resize(background, background_size)
 
-        face = frame[y:y+h, x:x+w]
-        center = x + w//2, y + h//2
+        # MODIFIED: Expand the face region to include more of the hair and chin
+        # Calculate expanded face boundaries with proper boundary checking
+        expand_ratio_x = 0.5  # Expand width by 50%
+        expand_ratio_y = 0.5  # Expand height by 50%
         
-        # Création du masque elliptique au lieu du cercle
-        mask = np.zeros((max(w,h),max(w,h)), dtype=np.uint8)
-
-        # Utilisation de cv2.ellipse avec l'axe majeur=w et mineur=h/2
+        new_w = int(w * (1 + expand_ratio_x))
+        new_h = int(h * (1 + expand_ratio_y))
+        
+        # Calculate new top-left corner to keep the face centered
+        new_x = max(0, x - (new_w - w) // 2)
+        new_y = max(0, y - (new_h - h) // 2)
+        
+        # Make sure we don't go beyond frame boundaries
+        new_w = min(new_w, frame.shape[1] - new_x)
+        new_h = min(new_h, frame.shape[0] - new_y)
+        
+        # Extract the expanded face region
+        face = frame[new_y:new_y+new_h, new_x:new_x+new_w]
+        
+        # FIXED: Create a mask with the exact same dimensions as the face
+        # Instead of using max(new_w,new_h), create a mask with the exact face dimensions
+        mask = np.zeros((new_h, new_w), dtype=np.uint8)
+        
+        # Calculate the ellipse center and size based on actual face dimensions
+        center_x, center_y = new_w // 2, new_h // 2
+        
+        # MODIFIED: Make the ellipse larger to better encompass hair and chin
+        # Draw ellipse directly with the face dimensions
         cv2.ellipse(
             mask,
-            (max(w,h)//2, max(w,h)//2),
-            (w//3, h//2),  # Axe majeur=w/2, axe mineur=h/4
-            0,  # Pas d'angle de rotation
-            0,  # Angle de début
-            360,  # Angle de fin
-            255,  # Couleur blanche pour le masque
-            -1   # Épaisseur -1 pour remplir l'ellipse
+            (center_x, center_y),  # Center of the ellipse matches center of face
+            (int(new_w * 0.37), int(new_h * 0.5)),  # Better cover hair and chin
+            0,  # No rotation
+            0,  # Start angle
+            360,  # End angle
+            255,  # White color for mask
+            -1   # Fill the ellipse
         )
         
-                # Apply the mask to get elliptical face
+        # Display the mask (for debugging)
+        cv2.imshow("m", mask)
+        
+        # FIXED: Now the mask has the same dimensions as the face, so bitwise_and will work
         face_cropped = cv2.bitwise_and(face, face, mask=mask)
         
         # Redimensionnement
         resized_dia = int(output.shape[0] * img_coordonate['face_ratio'])
+        
+        # Resize both face and mask to the same dimensions
         face_elliptical = cv2.resize(face_cropped, (resized_dia, resized_dia), 
                                     interpolation=cv2.INTER_CUBIC)
-        mask = cv2.resize(mask, (resized_dia, resized_dia))
+        mask_resized = cv2.resize(mask, (resized_dia, resized_dia))
         
+        # MODIFIED: Increased blur amount for smoother transition at the edges
         # Get smooth alpha blending for the face
-        face_for_blend, alpha_mask = contour_fade(face_elliptical, mask, blur_amount=25)
+        face_for_blend, alpha_mask = contour_fade(face_elliptical, mask_resized, blur_amount=35)
         
         # Placement sur l'arrière-plan
         bg_x = int(img_coordonate['x_faceplacement'] * output.shape[1] - face_elliptical.shape[1]//2)
         bg_y = int(img_coordonate['y_faceplacement'] * output.shape[0] - face_elliptical.shape[0]//2)
+        
+        # Make sure the coordinates are valid
+        if bg_x < 0 or bg_y < 0 or bg_x + resized_dia > output.shape[1] or bg_y + resized_dia > output.shape[0]:
+            continue
         
         # Extract the region for blending
         region = output[bg_y:bg_y+face_elliptical.shape[0], bg_x:bg_x+face_elliptical.shape[1]]
@@ -132,30 +162,4 @@ def detect_and_track_faces(frame, face_cascade, img_coordonate, background):
         # Place the blended result back into the output
         output[bg_y:bg_y+face_elliptical.shape[0], bg_x:bg_x+face_elliptical.shape[1]] = blended
      
-
-
-
-
-
-
-        # face_elliptical = cv2.bitwise_and(face, face, mask=mask)
-        
-        # # Redimensionnement
-        # resized_dia = int(output.shape[0]*img_coordonate['face_ratio'])
-        # face_elliptical = cv2.resize(face_elliptical, (resized_dia, resized_dia), 
-        #                    interpolation=cv2.INTER_CUBIC)
-        # mask = cv2.resize(mask,(resized_dia,resized_dia))
-        # contours, heirarchy = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        # cv2.drawContours(mask, contours, -1, (0,0,0), 1)
-
-        # # Placement sur l'arrière-plan
-        # bg_x = int(img_coordonate['x_faceplacement']*output.shape[1]-face_elliptical.shape[1]//2)
-        # bg_y = int(img_coordonate['y_faceplacement']*output.shape[0]-face_elliptical.shape[0]//2)
-
-        # # face addition to background (prone to error if face is oversized !!)
-        # region = output[bg_y:bg_y+int(face_elliptical.shape[0]), bg_x:bg_x+int(face_elliptical.shape[1])]
-        # result = cv2.bitwise_and(region, region, mask=cv2.bitwise_not(mask))
-        # result = cv2.add(result, face_elliptical)
-        # output[bg_y:bg_y+int(face_elliptical.shape[0]), bg_x:bg_x+int(face_elliptical.shape[1])] = result
-
     return frame, output

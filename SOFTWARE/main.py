@@ -27,28 +27,17 @@ def main():
         ret, frame = cap.read()
         frame_copy = frame.copy()
 
-
         #background refreshing part
         if time.time() - start_t > background_refresh_time :
             selected_background, background_ref  = get_random_background("background")
             background = cv2.imread(f"background/{selected_background}")
             start_t = time.time()
 
+        #cv2.namedWindow("result", cv2.WND_PROP_FULLSCREEN)
+        #cv2.setWindowProperty("result", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+        #cv2.resizeWindow("result", 1920, 1080)
+        
         frame, image = detect_and_track_faces(frame, face_cascade, background_ref, background)
-#         image = cv2.resize(background, (1080, 1920))
-
-        image = add_text_to_image(
-            image,
-            "Vous aussi..................",
-            position=(650, 950),
-            font_scale=2,
-            color=(0, 0, 0),
-            thickness=1
-        )
-
-#         cv2.namedWindow("result", cv2.WND_PROP_FULLSCREEN)
-#         cv2.setWindowProperty("result", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
-#         cv2.resizeWindow("result", 1920, 1080)
         cv2.imshow("result", image)
         
         if cv2.waitKey(1) & 0xFF == ord('q'):

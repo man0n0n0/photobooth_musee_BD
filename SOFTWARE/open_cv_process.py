@@ -1,7 +1,6 @@
 import cv2
 import dlib
 import numpy as np
-from math import *
 import random
 
 background_size = (720, 1040)
@@ -51,40 +50,38 @@ def create_landmarks_mask(face, rect):
     # Get jawline points
     jawline = points[0:17]
 
+    #### ellipse hairline method
     # Simple approach: calculate the center top point of the forehead
     left_temple = points[0]
     right_temple = points[16]
-    
+
     # Calculate the width of the face at the temples
     face_width = right_temple[0] - left_temple[0]
-    
     # Calculate the center point between temples
-    center_x = left_temple[0] + face_width // 2
-    
+    face_center = ((left_temple[0]+right_temple[0])//2,(left_temple[1]+right_temple[1])//2)
     # Calculate forehead height (as proportion of face width)
-    forehead_height = int(face_width * 0.6)
-    top_y = max(0, min(left_temple[1], right_temple[1]) - forehead_height)
-    
-    # Create a simple arc for the forehead
-    # We'll use a half-ellipse spanning from left temple to right temple
+    forehead_height = int(face_width * 0.4)
+    # Calculate the angle 
+    delta_temple_y = right_temple[1] - left_temple[1]
+    face_angle = 90 - np.rad2deg(np.arctan(face_width/(delta_temple_y))) if delta_temple_y < 0 else 270 - abs(np.rad2deg(np.arctan(face_width/(delta_temple_y))))
+    # Create a simple arc for the forehead-half-ellipse spanning from left temple to right temple
     cv2.ellipse(
         mask,
-        (center_x, top_y + forehead_height),  # center point (at eyebrow level)
-        (face_width // 2, int(forehead_height*1.2)),  # half width and height of ellipse
-        170,  # angle
+        face_center,  # center point (at eyebrow level)
+        (face_width // 2, forehead_height),  # half width and height of ellipse
+        face_angle,  # angle
         180, 0,  # start and end angles (half circle on top)
         255, -1  # color and fill
     )
 
     # Draw the extremum part of the polygon
     cv2.polylines(mask, [jawline], False, 255, 2)
-    
     # Fill the mask by connecting the jawline
     # Create a closed contour including the jawline
     contour = np.vstack([jawline])
     
     cv2.fillPoly(mask, [contour], 255)
-    
+        
     return mask
 
 def detect_and_track_faces(frame, face_cascade, img_coordonate, background):

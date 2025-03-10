@@ -1,9 +1,10 @@
 import cv2
 import dlib
 import numpy as np
+from math import *
 import random
 
-background_size = (1920, 1080)
+background_size = (720, 1040)
 
 # Configuration de la zone à exclure
 EXCLUSION_ZONE = {
@@ -49,7 +50,7 @@ def create_landmarks_mask(face, rect):
     
     # Get jawline points
     jawline = points[0:17]
-    
+
     # Simple approach: calculate the center top point of the forehead
     left_temple = points[0]
     right_temple = points[16]
@@ -70,12 +71,12 @@ def create_landmarks_mask(face, rect):
         mask,
         (center_x, top_y + forehead_height),  # center point (at eyebrow level)
         (face_width // 2, int(forehead_height*1.2)),  # half width and height of ellipse
-        180,  # angle
+        170,  # angle
         180, 0,  # start and end angles (half circle on top)
         255, -1  # color and fill
     )
 
-    # Draw the jawline
+    # Draw the extremum part of the polygon
     cv2.polylines(mask, [jawline], False, 255, 2)
     
     # Fill the mask by connecting the jawline

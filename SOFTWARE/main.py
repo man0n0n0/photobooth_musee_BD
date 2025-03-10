@@ -33,7 +33,6 @@ def main():
             background = cv2.imread(f"background/{selected_background}")
             start_t = time.time()
 
-        #image = cv2.resize(background, (1080, 1920))
         # image = add_text_to_image(
         #     image,
         #     "Vous aussi..................",

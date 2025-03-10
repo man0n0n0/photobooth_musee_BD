@@ -54,7 +54,7 @@ def create_landmarks_mask(face, rect):
     # Calculate the center point between temples
     face_center = ((left_temple[0]+right_temple[0])//2,(left_temple[1]+right_temple[1])//2)
     # Calculate forehead height (as proportion of face width)
-    forehead_height = int(face_width * 0.4)
+    forehead_height = int(face_width * 0.6)
     # Calculate the angle 
     delta_temple_y = right_temple[1] - left_temple[1]
     face_angle = 90 - np.rad2deg(np.arctan(face_width/(delta_temple_y))) if delta_temple_y < 0 else 270 - abs(np.rad2deg(np.arctan(face_width/(delta_temple_y))))
@@ -78,7 +78,7 @@ def create_landmarks_mask(face, rect):
         
     # Polygon smoothing
 
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (20,20))
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (30,30))
     mask = cv2.dilate(mask, kernel)
     mask = cv2.erode(mask, kernel, iterations=2)
     mask = cv2.dilate(mask, kernel)

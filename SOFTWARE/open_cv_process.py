@@ -129,7 +129,7 @@ def detect_and_track_faces(frame, face_cascade, img_coordonate, background):
         h_extended = h + forehead_extension + (y - y_extended)
         
         # Extend width on both sides
-        width_extension = int(w * 0.15)  # Extend by 15% on each side (30% total)
+        width_extension = int(w * 0.20)  # Extend by 15% on each side (30% total)
         x_extended = max(0, x - width_extension)
         w_extended = w + width_extension + (x - x_extended) + width_extension
         # Ensure we don't exceed frame boundaries

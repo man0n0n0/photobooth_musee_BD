@@ -5,7 +5,6 @@ from open_cv_process import detect_and_track_faces
 from background_management import get_random_background
 from text_overlay import add_text_to_image  # Importer la fonction
 
-
 background_refresh_time = 5
 
 def main():

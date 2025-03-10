@@ -149,11 +149,8 @@ def detect_and_track_faces(frame, face_cascade, img_coordonate, background):
         if len(dlib_faces) > 0:
             rect = dlib_faces[0]
         
-        # Create mask with rounded forehead
+        # Create mask with rounded forehead and smooth edges
         face_mask = create_landmarks_mask(gray_face, rect)
-        
-        # Apply mask to face
-        face_masked = cv2.bitwise_and(face, face, mask=face_mask)
         
         # Calculate output dimensions based on target height while preserving aspect ratio
         target_height = int(resized_background.shape[0] * img_coordonate['face_ratio'])
@@ -163,7 +160,7 @@ def detect_and_track_faces(frame, face_cascade, img_coordonate, background):
         target_width = int(target_height * aspect_ratio)
         
         # Resize face and mask while preserving aspect ratio
-        face_masked = cv2.resize(face_masked, (target_width, target_height), interpolation=cv2.INTER_LINEAR)
+        face_resized = cv2.resize(face, (target_width, target_height), interpolation=cv2.INTER_LINEAR)
         face_mask = cv2.resize(face_mask, (target_width, target_height), interpolation=cv2.INTER_LINEAR)
         
         # Calculate placement
@@ -176,16 +173,20 @@ def detect_and_track_faces(frame, face_cascade, img_coordonate, background):
             bg_y + target_height > resized_background.shape[0]):
             continue
         
-        # Extract region
-        region = resized_background[bg_y:bg_y+target_height, bg_x:bg_x+target_width]
+        # Extract region from background
+        region = resized_background[bg_y:bg_y+target_height, bg_x:bg_x+target_width].copy()
         
-        # Apply mask and add face
-        inv_mask = cv2.bitwise_not(face_mask)
-        result = cv2.bitwise_and(region, region, mask=inv_mask)
-        result = cv2.add(result, face_masked)
+        # Create normalized alpha mask (0 to 1)
+        alpha = face_mask.astype(float) / 255
         
-        # Update output
+        # Expand alpha to 3 channels
+        alpha = cv2.merge([alpha, alpha, alpha])
+        
+        # Perform alpha blending: dst = alpha * src1 + (1 - alpha) * src2
+        blended = cv2.convertScaleAbs(face_resized * alpha + region * (1.0 - alpha))
+        
+        # Update the output image
         output = resized_background.copy()
-        output[bg_y:bg_y+target_height, bg_x:bg_x+target_width] = result
+        output[bg_y:bg_y+target_height, bg_x:bg_x+target_width] = blended
     
     return frame, output

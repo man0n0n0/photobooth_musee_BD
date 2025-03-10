@@ -7,7 +7,7 @@ background_refs = {
     "join_the_team_full_hd-1.jpg" : {
     "x_faceplacement" : 0.33,
     "y_faceplacement" : 0.29,
-    "face_ratio" : 0.21
+    "face_ratio" : 0.3
     },
         "join_the_team_full_hd-2.jpg" : {
     "x_faceplacement" : 0.575,

@@ -19,21 +19,22 @@ shape_predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")
 
 def create_landmarks_mask(face, rect):
     """
-    Create a mask for the face using facial landmarks from dlib.
+    Create a mask for the face using facial landmarks from dlib,
+    with a simple rounded forehead.
     
     Args:
         face (numpy.ndarray): The face image
         rect (dlib.rectangle): The face rectangle from dlib
     
     Returns:
-        numpy.ndarray: A binary mask following the face contour
+        numpy.ndarray: A binary mask following the face contour with rounded forehead
     """
     # Create an empty mask with the same size as the face
-    mask = np.zeros(face.shape[:2], dtype=np.uint8)
+    h, w = face.shape[:2]
+    mask = np.zeros((h, w), dtype=np.uint8)
     
     # If no face rectangle provided, return a default elliptical mask
     if rect is None:
-        h, w = face.shape[:2]
         cv2.ellipse(
             mask,
             (w//2, h//2),
@@ -46,27 +47,54 @@ def create_landmarks_mask(face, rect):
     shape = shape_predictor(face, rect)
     points = np.array([(shape.part(i).x, shape.part(i).y) for i in range(shape.num_parts)], dtype=np.int32)
     
-    # Get the face contour points
-    face_contour = np.vstack([
-        points[0:17],  # Jawline
-        points[26:16:-1],  # Right eyebrow (reversed)
-        points[0:1]  # Connect back to the start
-    ])
+    # Get jawline points
+    jawline = points[0:17]
     
-    # Draw the face contour as a filled polygon
-    cv2.fillPoly(mask, [face_contour], 255)
+    # Simple approach: calculate the center top point of the forehead
+    left_temple = points[0]
+    right_temple = points[16]
+    
+    # Calculate the width of the face at the temples
+    face_width = right_temple[0] - left_temple[0]
+    
+    # Calculate the center point between temples
+    center_x = left_temple[0] + face_width // 2
+    
+    # Calculate forehead height (as proportion of face width)
+    forehead_height = int(face_width * 0.6)
+    top_y = max(0, min(left_temple[1], right_temple[1]) - forehead_height)
+    
+    # Create a simple arc for the forehead
+    # We'll use a half-ellipse spanning from left temple to right temple
+    cv2.ellipse(
+        mask,
+        (center_x, top_y + forehead_height),  # center point (at eyebrow level)
+        (face_width // 2, int(forehead_height*1.2)),  # half width and height of ellipse
+        180,  # angle
+        180, 0,  # start and end angles (half circle on top)
+        255, -1  # color and fill
+    )
+
+    # Draw the jawline
+    cv2.polylines(mask, [jawline], False, 255, 2)
+    
+    # Fill the mask by connecting the jawline
+    # Create a closed contour including the jawline
+    contour = np.vstack([jawline])
+    
+    cv2.fillPoly(mask, [contour], 255)
     
     return mask
 
 def detect_and_track_faces(frame, face_cascade, img_coordonate, background):
-    """Détection et suivi des visages avec masque basé sur les points de repère faciaux."""
+    """Détection et suivi des visages avec masque basé sur les points de repère faciaux et front arrondi."""
     # Pre-load and resize background images
     waiter = cv2.resize(cv2.imread(f"background/waiting.jpg"), background_size)
     resized_background = cv2.resize(background, background_size)
     output = waiter
     
     # Downscale frame for faster processing
-    scale_factor = 0.5
+    scale_factor = 1
     small_frame = cv2.resize(frame, (0, 0), fx=scale_factor, fy=scale_factor)
     
     # Convert to grayscale once
@@ -96,11 +124,16 @@ def detect_and_track_faces(frame, face_cascade, img_coordonate, background):
         # Scale coordinates back to original frame size
         x, y, w, h = int(x/scale_factor), int(y/scale_factor), int(w/scale_factor), int(h/scale_factor)
         
-        # Extract face region
-        face = frame[y:y+h, x:x+w]
+        # Extend the face region upward to include more forehead
+        forehead_extension = int(h * 0.4)  # Extend by 40% of face height for rounded forehead
+        y_extended = max(0, y - forehead_extension)
+        h_extended = h + forehead_extension + (y - y_extended)
+        
+        # Extract face region with extended forehead
+        face = frame[y_extended:y_extended+h_extended, x:x+w]
         if face.size == 0:
             continue
-            
+        
         # Convert face to grayscale for dlib
         gray_face = cv2.cvtColor(face, cv2.COLOR_BGR2GRAY)
         
@@ -110,31 +143,35 @@ def detect_and_track_faces(frame, face_cascade, img_coordonate, background):
         if len(dlib_faces) > 0:
             rect = dlib_faces[0]
         
-        # Create mask
+        # Create mask with rounded forehead
         face_mask = create_landmarks_mask(gray_face, rect)
         
         # Apply mask to face
         face_masked = cv2.bitwise_and(face, face, mask=face_mask)
         
-        # Calculate output dimensions once
-        resized_dia = int(resized_background.shape[0] * img_coordonate['face_ratio'])
+        # Calculate output dimensions based on target height while preserving aspect ratio
+        target_height = int(resized_background.shape[0] * img_coordonate['face_ratio'])
         
-        # Resize face and mask
-        face_masked = cv2.resize(face_masked, (resized_dia, resized_dia), interpolation=cv2.INTER_LINEAR)
-        face_mask = cv2.resize(face_mask, (resized_dia, resized_dia), interpolation=cv2.INTER_LINEAR)
+        # Calculate width to maintain aspect ratio
+        aspect_ratio = w / h_extended
+        target_width = int(target_height * aspect_ratio)
         
-        # Calculate placement once
-        bg_x = int(img_coordonate['x_faceplacement'] * resized_background.shape[1] - resized_dia//2)
-        bg_y = int(img_coordonate['y_faceplacement'] * resized_background.shape[0] - resized_dia//2)
+        # Resize face and mask while preserving aspect ratio
+        face_masked = cv2.resize(face_masked, (target_width, target_height), interpolation=cv2.INTER_LINEAR)
+        face_mask = cv2.resize(face_mask, (target_width, target_height), interpolation=cv2.INTER_LINEAR)
+        
+        # Calculate placement
+        bg_x = int(img_coordonate['x_faceplacement'] * resized_background.shape[1] - target_width//2)
+        bg_y = int(img_coordonate['y_faceplacement'] * resized_background.shape[0] - target_height//2)
         
         # Ensure coordinates are within bounds
-        if (bg_x < 0 or bg_y < 0 or 
-            bg_x + resized_dia > resized_background.shape[1] or 
-            bg_y + resized_dia > resized_background.shape[0]):
+        if (bg_x < 0 or bg_y < 0 or
+            bg_x + target_width > resized_background.shape[1] or
+            bg_y + target_height > resized_background.shape[0]):
             continue
         
         # Extract region
-        region = resized_background[bg_y:bg_y+resized_dia, bg_x:bg_x+resized_dia]
+        region = resized_background[bg_y:bg_y+target_height, bg_x:bg_x+target_width]
         
         # Apply mask and add face
         inv_mask = cv2.bitwise_not(face_mask)
@@ -143,6 +180,6 @@ def detect_and_track_faces(frame, face_cascade, img_coordonate, background):
         
         # Update output
         output = resized_background.copy()
-        output[bg_y:bg_y+resized_dia, bg_x:bg_x+resized_dia] = result
-        
+        output[bg_y:bg_y+target_height, bg_x:bg_x+target_width] = result
+    
     return frame, output

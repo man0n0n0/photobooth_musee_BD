@@ -1,7 +1,6 @@
 import cv2
 import dlib
 import numpy as np
-import skimage.exposure
 import random
 
 background_size = (720, 1040)
@@ -55,7 +54,7 @@ def create_landmarks_mask(face, rect):
     # Calculate the center point between temples
     face_center = ((left_temple[0]+right_temple[0])//2,(left_temple[1]+right_temple[1])//2)
     # Calculate forehead height (as proportion of face width)
-    forehead_height = int(face_width * 0.4)
+    forehead_height = int(face_width * 0.6)
     # Calculate the angle 
     delta_temple_y = right_temple[1] - left_temple[1]
     face_angle = 90 - np.rad2deg(np.arctan(face_width/(delta_temple_y))) if delta_temple_y < 0 else 270 - abs(np.rad2deg(np.arctan(face_width/(delta_temple_y))))
@@ -79,11 +78,11 @@ def create_landmarks_mask(face, rect):
         
     # Polygon smoothing
 
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (20,20))
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (30,30))
     mask = cv2.dilate(mask, kernel)
     mask = cv2.erode(mask, kernel, iterations=2)
     mask = cv2.dilate(mask, kernel)
-    cv2.imshow("mask",mask)
+
     return mask
 
 def detect_and_track_faces(frame, face_cascade, img_coordonate, background):
@@ -129,8 +128,15 @@ def detect_and_track_faces(frame, face_cascade, img_coordonate, background):
         y_extended = max(0, y - forehead_extension)
         h_extended = h + forehead_extension + (y - y_extended)
         
-        # Extract face region with extended forehead
-        face = frame[y_extended:y_extended+h_extended, x:x+w]
+        # Extend width on both sides
+        width_extension = int(w * 0.15)  # Extend by 15% on each side (30% total)
+        x_extended = max(0, x - width_extension)
+        w_extended = w + width_extension + (x - x_extended) + width_extension
+        # Ensure we don't exceed frame boundaries
+        w_extended = min(w_extended, frame.shape[1] - x_extended)
+        
+        # Extract face region with extended forehead and width
+        face = frame[y_extended:y_extended+h_extended, x_extended:x_extended+w_extended]
         if face.size == 0:
             continue
         
@@ -153,7 +159,7 @@ def detect_and_track_faces(frame, face_cascade, img_coordonate, background):
         target_height = int(resized_background.shape[0] * img_coordonate['face_ratio'])
         
         # Calculate width to maintain aspect ratio
-        aspect_ratio = w / h_extended
+        aspect_ratio = w_extended / h_extended
         target_width = int(target_height * aspect_ratio)
         
         # Resize face and mask while preserving aspect ratio

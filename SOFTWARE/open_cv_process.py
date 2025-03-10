@@ -22,13 +22,15 @@ def detect_and_track_faces(frame, face_cascade, img_coordonate, background):
     # Conversion en gris
     gray = cv2.cvtColor(frame_copy, cv2.COLOR_BGR2GRAY)
     
-    # Création d'un masque pour exclure la zone
     mask = np.ones(gray.shape, dtype=np.uint8) * 255
-    cv2.rectangle(mask, 
-                 (EXCLUSION_ZONE['x'], EXCLUSION_ZONE['y']), 
-                 (EXCLUSION_ZONE['x'] + EXCLUSION_ZONE['w'], 
-                  EXCLUSION_ZONE['y'] + EXCLUSION_ZONE['h']), 
-                 0, -1)
+
+    # Création d'un masque pour exclure la zone 
+    # DISCARD FOR MANONO LAPTOP 
+    # cv2.rectangle(mask, 
+    #              (EXCLUSION_ZONE['x'], EXCLUSION_ZONE['y']), 
+    #              (EXCLUSION_ZONE['x'] + EXCLUSION_ZONE['w'], 
+    #               EXCLUSION_ZONE['y'] + EXCLUSION_ZONE['h']), 
+    #              0, -1)
     
     # Appliquer le masque à l'image en gris
     gray_masked = cv2.bitwise_and(gray, gray, mask=mask)

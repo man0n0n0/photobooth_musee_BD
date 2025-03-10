@@ -1,6 +1,7 @@
 import cv2
 import dlib
 import numpy as np
+import skimage.exposure
 import random
 
 background_size = (720, 1040)
@@ -33,14 +34,8 @@ def create_landmarks_mask(face, rect):
     h, w = face.shape[:2]
     mask = np.zeros((h, w), dtype=np.uint8)
     
-    # If no face rectangle provided, return a default elliptical mask
+    # If no face rectangle provided, return a empty mask
     if rect is None:
-        cv2.ellipse(
-            mask,
-            (w//2, h//2),
-            (w//2, h//2),
-            0, 0, 360, 255, -1
-        )
         return mask
     
     # Get facial landmarks
@@ -82,6 +77,13 @@ def create_landmarks_mask(face, rect):
     
     cv2.fillPoly(mask, [contour], 255)
         
+    # Polygon smoothing
+
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (20,20))
+    mask = cv2.dilate(mask, kernel)
+    mask = cv2.erode(mask, kernel, iterations=2)
+    mask = cv2.dilate(mask, kernel)
+    cv2.imshow("mask",mask)
     return mask
 
 def detect_and_track_faces(frame, face_cascade, img_coordonate, background):

@@ -33,14 +33,6 @@ def main():
             background = cv2.imread(f"background/{selected_background}")
             start_t = time.time()
 
-        # image = add_text_to_image(
-        #     image,
-        #     "Vous aussi..................",
-        #     position=(650, 950),
-        #     font_scale=2,
-        #     color=(0, 0, 0),
-        #     thickness=1
-        # )
         #cv2.namedWindow("result", cv2.WND_PROP_FULLSCREEN)
         #cv2.setWindowProperty("result", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
         #cv2.resizeWindow("result", 1920, 1080)

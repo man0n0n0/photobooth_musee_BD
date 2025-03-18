@@ -11,13 +11,13 @@ background_refs = {
     },
         "join_the_team_full_hd-2.jpg" : {
     "x_faceplacement" : 0.575,
-    "y_faceplacement" : 0.25,
-    "face_ratio" : 0.30
+    "y_faceplacement" : 0.22,
+    "face_ratio" : 0.40
     },
         "join_the_team_full_hd-3.jpg" : {
     "x_faceplacement" : 0.50,
     "y_faceplacement" : 0.19,
-    "face_ratio" : 0.31
+    "face_ratio" : 0.37
     },
         "join_the_team_full_hd-4.jpg" : {
     "x_faceplacement" : 0.65,

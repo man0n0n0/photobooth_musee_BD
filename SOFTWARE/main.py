@@ -1,7 +1,7 @@
 import os
 import cv2
 import time
-from open_cv_process import detect_and_track_faces
+from open_cv_process_optimized import detect_and_track_faces
 from background_management import get_random_background
 from text_overlay import add_text_to_image  # Importer la fonction
 

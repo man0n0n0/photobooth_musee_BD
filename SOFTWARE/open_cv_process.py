@@ -5,14 +5,6 @@ import random
 
 background_size = (720, 1040)
 
-# Configuration de la zone à exclure
-EXCLUSION_ZONE = {
-    'x': 100,    # Position X de la zone à exclure
-    'y': 100,    # Position Y de la zone à exclure
-    'w': 200,    # Largeur de la zone à exclure
-    'h': 200     # Hauteur de la zone à exclure
-}
-
 # Initialize these only once outside the functions
 face_detector = dlib.get_frontal_face_detector()
 shape_predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")
@@ -77,7 +69,6 @@ def create_landmarks_mask(face, rect):
     cv2.fillPoly(mask, [contour], 255)
         
     # Polygon smoothing
-
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (30,30))
     mask = cv2.dilate(mask, kernel)
     mask = cv2.erode(mask, kernel, iterations=2)
@@ -93,7 +84,7 @@ def detect_and_track_faces(frame, face_cascade, img_coordonate, background):
     output = waiter
     
     # Downscale frame for faster processing
-    scale_factor = 1
+    scale_factor = 0.5
     small_frame = cv2.resize(frame, (0, 0), fx=scale_factor, fy=scale_factor)
     
     # Convert to grayscale once

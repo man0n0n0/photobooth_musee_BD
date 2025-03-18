@@ -130,76 +130,81 @@ def detect_and_track_faces(frame, face_cascade, img_coordinate, background):
         largest_face_idx = np.argmax(face_areas)
         faces = [faces[largest_face_idx]]
     
-    # Process the selected face
-    for (x, y, w, h) in faces:
-        # Scale coordinates back to original frame size
-        x, y = int(x / scale_factor), int(y / scale_factor)
-        w, h = int(w / scale_factor), int(h / scale_factor)
-        
-        # Extend face region for forehead (pre-calculate extensions)
-        forehead_extension = int(h * 0.4)
-        width_extension = int(w * 0.20)
-        
-        # Calculate extended coordinates with bounds checking
-        y_extended = max(0, y - forehead_extension)
-        h_extended = min(frame.shape[0] - y_extended, h + forehead_extension + (y - y_extended))
-        
-        x_extended = max(0, x - width_extension)
-        w_extended = min(frame.shape[1] - x_extended, w + 2 * width_extension)
-        
-        # Extract face region with extended dimensions
-        face = frame[y_extended:y_extended+h_extended, x_extended:x_extended+w_extended]
-        if face.size == 0:
-            continue
-        
-        # Convert face to grayscale for dlib (reuse gray conversion)
-        gray_face = cv2.cvtColor(face, cv2.COLOR_BGR2GRAY)
-        
-        # Detect face with dlib - use faster detection
-        rect = None
-        dlib_faces = face_detector(gray_face, 0)  # 0 for faster detection
-        if dlib_faces:
-            rect = dlib_faces[0]
+    try: 
+        # Process the selected face
+        for (x, y, w, h) in faces:
+            # Scale coordinates back to original frame size
+            x, y = int(x / scale_factor), int(y / scale_factor)
+            w, h = int(w / scale_factor), int(h / scale_factor)
             
-            # Create mask with rounded forehead
-            face_mask = create_landmarks_mask(gray_face, rect)
+            # Extend face region for forehead (pre-calculate extensions)
+            forehead_extension = int(h * 0.4)
+            width_extension = int(w * 0.20)
             
-            # Calculate output dimensions
-            target_height = int(resized_background.shape[0] * img_coordinate['face_ratio'])
-            aspect_ratio = w_extended / h_extended
-            target_width = int(target_height * aspect_ratio)
+            # Calculate extended coordinates with bounds checking
+            y_extended = max(0, y - forehead_extension)
+            h_extended = min(frame.shape[0] - y_extended, h + forehead_extension + (y - y_extended))
             
-            # Optimize resize operations with INTER_AREA for downsampling
-            resize_method = cv2.INTER_AREA if target_width < w_extended else cv2.INTER_LINEAR
-            face_resized = cv2.resize(face, (target_width, target_height), interpolation=resize_method)
-            face_mask = cv2.resize(face_mask, (target_width, target_height), interpolation=cv2.INTER_NEAREST)
+            x_extended = max(0, x - width_extension)
+            w_extended = min(frame.shape[1] - x_extended, w + 2 * width_extension)
             
-            # Calculate placement (pre-compute multiplications)
-            bg_x = int(img_coordinate['x_faceplacement'] * resized_background.shape[1] - target_width // 2)
-            bg_y = int(img_coordinate['y_faceplacement'] * resized_background.shape[0] - target_height // 2)
+            # Extract face region with extended dimensions
+            face = frame[y_extended:y_extended+h_extended, x_extended:x_extended+w_extended]
+            if face.size == 0:
+                continue
             
-            # Bounds checking
-            if (bg_x >= 0 and bg_y >= 0 and
-                bg_x + target_width <= resized_background.shape[1] and
-                bg_y + target_height <= resized_background.shape[0]):
+            # Convert face to grayscale for dlib (reuse gray conversion)
+            gray_face = cv2.cvtColor(face, cv2.COLOR_BGR2GRAY)
+            
+            # Detect face with dlib - use faster detection
+            rect = None
+            dlib_faces = face_detector(gray_face, 0)  # 0 for faster detection
+
+            if dlib_faces:
+                rect = dlib_faces[0]
                 
-                # Extract region from background (use a view instead of copy when possible)
-                region = resized_background[bg_y:bg_y+target_height, bg_x:bg_x+target_width]
+                # Create mask with rounded forehead
+                face_mask = create_landmarks_mask(gray_face, rect)
                 
-                # Optimize alpha blending with vectorized operations
-                # Convert mask to float32 once and normalize
-                alpha = face_mask.astype(np.float32) / 255.0
+                # Calculate output dimensions
+                target_height = int(resized_background.shape[0] * img_coordinate['face_ratio'])
+                aspect_ratio = w_extended / h_extended
+                target_width = int(target_height * aspect_ratio)
                 
-                # Expand dimensions for broadcasting
-                alpha_3ch = np.expand_dims(alpha, axis=2)
+                # Optimize resize operations with INTER_AREA for downsampling
+                resize_method = cv2.INTER_AREA if target_width < w_extended else cv2.INTER_LINEAR
+                face_resized = cv2.resize(face, (target_width, target_height), interpolation=resize_method)
+                face_mask = cv2.resize(face_mask, (target_width, target_height), interpolation=cv2.INTER_NEAREST)
                 
-                # Vectorized blending
-                blended = cv2.convertScaleAbs(
-                    face_resized * alpha_3ch + region * (1.0 - alpha_3ch)
-                )
+                # Calculate placement (pre-compute multiplications)
+                bg_x = int(img_coordinate['x_faceplacement'] * resized_background.shape[1] - target_width // 2)
+                bg_y = int(img_coordinate['y_faceplacement'] * resized_background.shape[0] - target_height // 2)
                 
-                # Update output image efficiently
-                output = resized_background.copy()
-                output[bg_y:bg_y+target_height, bg_x:bg_x+target_width] = blended
-    
-    return frame, output
+                # Bounds checking
+                if (bg_x >= 0 and bg_y >= 0 and
+                    bg_x + target_width <= resized_background.shape[1] and
+                    bg_y + target_height <= resized_background.shape[0]):
+                    
+                    # Extract region from background (use a view instead of copy when possible)
+                    region = resized_background[bg_y:bg_y+target_height, bg_x:bg_x+target_width]
+                    
+                    # Optimize alpha blending with vectorized operations
+                    # Convert mask to float32 once and normalize
+                    alpha = face_mask.astype(np.float32) / 255.0
+                    
+                    # Expand dimensions for broadcasting
+                    alpha_3ch = np.expand_dims(alpha, axis=2)
+                    
+                    # Vectorized blending
+                    blended = cv2.convertScaleAbs(
+                        face_resized * alpha_3ch + region * (1.0 - alpha_3ch)
+                    )
+                    
+                    # Update output image efficiently
+                    output = resized_background.copy()
+                    output[bg_y:bg_y+target_height, bg_x:bg_x+target_width] = blended
+            
+            return frame, output
+
+    except: 
+        return frame, output #return only backgorund if error 

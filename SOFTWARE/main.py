@@ -24,20 +24,19 @@ def main():
     
     while True:
         ret, frame = cap.read()
-        
+
         #background refreshing part
         if time.time() - start_t > background_refresh_time :
             selected_background, background_ref  = get_random_background("background")
             background = cv2.imread(f"background/{selected_background}")
             start_t = time.time()
-
+       
+        frame, image = detect_and_track_faces(frame, face_cascade, background_ref, background)
+        cv2.imshow("result", image)
         #cv2.namedWindow("result", cv2.WND_PROP_FULLSCREEN)
         #cv2.setWindowProperty("result", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
         #cv2.resizeWindow("result", 1920, 1080)
-        
-        frame, image = detect_and_track_faces(frame, face_cascade, background_ref, background)
-        cv2.imshow("result", image)
-        
+
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 

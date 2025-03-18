@@ -12,7 +12,7 @@ face_detector = dlib.get_frontal_face_detector()
 shape_predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")
 
 # Pre-compute common kernels
-SMOOTH_KERNEL = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (30, 30))
+SMOOTH_KERNEL = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
 
 # Cache for background images
 background_cache = {}
@@ -60,13 +60,17 @@ def create_landmarks_mask(face, rect):
 
     # Calculate the width of the face at the temples
     face_width = right_temple[0] - left_temple[0]
+
     # Calculate the center point between temples
     face_center = ((left_temple[0]+right_temple[0])//2,(left_temple[1]+right_temple[1])//2)
+
     # Calculate forehead height (as proportion of face width)
     forehead_height = int(face_width * 0.6)
+
     # Calculate the angle 
     delta_temple_y = right_temple[1] - left_temple[1]
     face_angle = 90 - np.rad2deg(np.arctan(face_width/(delta_temple_y))) if delta_temple_y < 0 else 270 - abs(np.rad2deg(np.arctan(face_width/(delta_temple_y))))
+
     # Create a simple arc for the forehead-half-ellipse spanning from left temple to right temple
     cv2.ellipse(
         mask,
@@ -79,6 +83,7 @@ def create_landmarks_mask(face, rect):
 
     # Draw the extremum part of the polygon
     cv2.polylines(mask, [jawline], False, 255, 2)
+
     # Fill the mask by connecting the jawline
     # Create a closed contour including the jawline
     contour = np.vstack([jawline])
@@ -86,9 +91,9 @@ def create_landmarks_mask(face, rect):
     cv2.fillPoly(mask, [contour], 255)
     
     # Polygon smoothing - reduced iterations
-    # mask = cv2.dilate(mask, SMOOTH_KERNEL)
-    # mask = cv2.erode(mask, SMOOTH_KERNEL)
-    # mask = cv2.dilate(mask, SMOOTH_KERNEL)
+    mask = cv2.dilate(mask, SMOOTH_KERNEL)
+    mask = cv2.erode(mask, SMOOTH_KERNEL)
+    mask = cv2.dilate(mask, SMOOTH_KERNEL)
 
     return mask
 

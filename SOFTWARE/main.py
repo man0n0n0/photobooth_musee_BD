@@ -24,8 +24,7 @@ def main():
     
     while True:
         ret, frame = cap.read()
-        frame_copy = frame.copy()
-
+        
         #background refreshing part
         if time.time() - start_t > background_refresh_time :
             selected_background, background_ref  = get_random_background("background")

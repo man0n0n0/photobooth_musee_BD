@@ -90,9 +90,9 @@ def create_landmarks_mask(face, rect):
     
     cv2.fillPoly(mask, [contour], 255)
     
-    # Polygon smoothing - reduced iterations
+    # Polygon smoothing 
     mask = cv2.dilate(mask, SMOOTH_KERNEL)
-    mask = cv2.erode(mask, SMOOTH_KERNEL)
+    mask = cv2.erode(mask, SMOOTH_KERNEL, iterations=2)
     mask = cv2.dilate(mask, SMOOTH_KERNEL)
 
     return mask
@@ -161,6 +161,8 @@ def detect_and_track_faces(frame, face_cascade, img_coordinate, background):
             dlib_faces = face_detector(gray_face, 0)  # 0 for faster detection
 
             if dlib_faces:
+                t_last = time.time()
+
                 rect = dlib_faces[0]
                 
                 # Create mask with rounded forehead

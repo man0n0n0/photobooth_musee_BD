@@ -37,7 +37,7 @@ def main():
         #cv2.setWindowProperty("result", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
         #cv2.resizeWindow("result", 1920, 1080)
 
-        if cv2.waitKey(1) & 0xFF == ord('q'):
+        if cv2.waitKey(50) & 0xFF == ord('q'):
             break
 
     cap.release()

@@ -30,9 +30,19 @@ def main():
             selected_background, background_ref  = get_random_background("background")
             background = cv2.imread(f"background/{selected_background}")
             start_t = time.time()
-       
-        frame, image = detect_and_track_faces(frame, face_cascade, background_ref, background)
+        
+        frame, image, face_detected = detect_and_track_faces(frame, face_cascade, background_ref, background)
+        
+        #anti-strobbing part
+        if not face_detected and face_detected_on_previous : 
+            time.sleep(1)
+
         cv2.imshow("result", image)
+
+
+
+        face_detected_on_previous = face_detected
+
         #cv2.namedWindow("result", cv2.WND_PROP_FULLSCREEN)
         #cv2.setWindowProperty("result", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
         #cv2.resizeWindow("result", 1920, 1080)

@@ -122,7 +122,7 @@ def detect_and_track_faces(frame, face_cascade, img_coordinate, background):
     
     # If no faces detected, return waiting image
     if len(faces) == 0:
-        return frame, output
+        return frame, output, True
     
     # Select only the largest face for processing (optimization)
     if len(faces) > 1:
@@ -161,7 +161,7 @@ def detect_and_track_faces(frame, face_cascade, img_coordinate, background):
             dlib_faces = face_detector(gray_face, 0)  # 0 for faster detection
 
             if dlib_faces:
-                t_last = time.time()
+                face_detected = True
 
                 rect = dlib_faces[0]
                 
@@ -206,7 +206,10 @@ def detect_and_track_faces(frame, face_cascade, img_coordinate, background):
                     output = resized_background.copy()
                     output[bg_y:bg_y+target_height, bg_x:bg_x+target_width] = blended
             
-            return frame, output
+            else : 
+                face_detected = False
+
+            return frame, output, face_detected
 
     except: 
-        return frame, output #return only backgorund if error 
+        return frame, output, True #return only backgorund if error 

@@ -21,11 +21,15 @@ def main():
     start_t = time.time()
 
     face_detected_on_previous = False
+    next_frame_freeze = False
 
     # video captureq
     cap = cv2.VideoCapture(0)
     
     while True:
+        if next_frame_freeze :
+            time.sleep(1)
+
         ret, frame = cap.read()
 
         #background refreshing part
@@ -36,17 +40,15 @@ def main():
         
         frame, image, face_detected = detect_and_track_faces(frame, face_cascade, background_ref, background)
         
-        #anti-strobbing part
-        if face_detected_on_previous and not face_detected  : 
-            time.sleep(2)
-
-
-        face_detected_on_previous = face_detected
-
         cv2.namedWindow("result", cv2.WND_PROP_FULLSCREEN)
         cv2.setWindowProperty("result", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
 
+        #anti-strobbing
+        next_frame_freeze = True if face_detected_on_previous and not face_detected else False
+
         cv2.imshow("result", image)
+
+        face_detected_on_previous = face_detected
 
         if cv2.waitKey(50) & 0xFF == ord('q'):
             break

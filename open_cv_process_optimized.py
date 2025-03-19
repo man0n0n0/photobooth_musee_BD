@@ -122,7 +122,7 @@ def detect_and_track_faces(frame, face_cascade, img_coordinate, background):
     
     # If no faces detected, return waiting image
     if len(faces) == 0:
-        return frame, output, True
+        return frame, output, False
     
     # Select only the largest face for processing (optimization)
     if len(faces) > 1:
@@ -212,4 +212,4 @@ def detect_and_track_faces(frame, face_cascade, img_coordinate, background):
             return frame, output, face_detected
 
     except: 
-        return frame, output, True #return only backgorund if error 
+        return frame, output, False #return only backgorund if error 

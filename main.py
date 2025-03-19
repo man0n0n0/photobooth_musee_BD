@@ -7,6 +7,7 @@ from text_overlay import add_text_to_image  # Importer la fonction
 
 background_refresh_time = 5
 
+
 def main():
     """Fonction principale."""
     #  create neuronal face detection
@@ -18,6 +19,8 @@ def main():
     
     # timer init
     start_t = time.time()
+
+    face_detected_on_previous = False
 
     # video captureq
     cap = cv2.VideoCapture(0)
@@ -34,16 +37,16 @@ def main():
         frame, image, face_detected = detect_and_track_faces(frame, face_cascade, background_ref, background)
         
         #anti-strobbing part
-        if not face_detected and face_detected_on_previous : 
+        if face_detected_on_previous and not face_detected  : 
             time.sleep(2)
 
-        cv2.imshow("result", image)
 
         face_detected_on_previous = face_detected
 
-        #cv2.namedWindow("result", cv2.WND_PROP_FULLSCREEN)
-        #cv2.setWindowProperty("result", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
-        #cv2.resizeWindow("result", 1920, 1080)
+        cv2.namedWindow("result", cv2.WND_PROP_FULLSCREEN)
+        cv2.setWindowProperty("result", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+
+        cv2.imshow("result", image)
 
         if cv2.waitKey(50) & 0xFF == ord('q'):
             break

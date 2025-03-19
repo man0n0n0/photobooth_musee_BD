@@ -42,12 +42,10 @@ def main():
         
         cv2.namedWindow("result", cv2.WND_PROP_FULLSCREEN)
         cv2.setWindowProperty("result", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+        cv2.imshow("result", image)
 
         #anti-strobbing
         next_frame_freeze = True if face_detected_on_previous and not face_detected else False
-
-        cv2.imshow("result", image)
-
         face_detected_on_previous = face_detected
 
         if cv2.waitKey(50) & 0xFF == ord('q'):

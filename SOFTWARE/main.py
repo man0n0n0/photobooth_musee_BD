@@ -35,11 +35,9 @@ def main():
         
         #anti-strobbing part
         if not face_detected and face_detected_on_previous : 
-            time.sleep(1)
+            time.sleep(2)
 
         cv2.imshow("result", image)
-
-
 
         face_detected_on_previous = face_detected
 

@@ -5,7 +5,7 @@ import time
 from functools import lru_cache
 
 # Global constants
-BACKGROUND_SIZE = (720, 1040)
+BACKGROUND_SIZE = (1080, 1920)
 
 # Initialize face detection tools once
 face_detector = dlib.get_frontal_face_detector()

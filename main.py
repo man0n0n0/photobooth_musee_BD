@@ -25,10 +25,6 @@ def main():
 
     # video captureq
     cap = cv2.VideoCapture(0)
-
-    # Get screen dimensions for fullscreen display
-    screen_width = 1080  # You can adjust this or use a method to get screen dimensions
-    screen_height = 1920
     
     while True:
         if next_frame_freeze :
@@ -44,8 +40,6 @@ def main():
         
         frame, image, face_detected = detect_and_track_faces(frame, face_cascade, background_ref, background)
         
-        image = cv2.resize(image, (screen_width, screen_height))
-
         cv2.namedWindow("result", cv2.WND_PROP_FULLSCREEN)
         cv2.setWindowProperty("result", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
         cv2.imshow("result", image)

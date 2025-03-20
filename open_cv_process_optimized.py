@@ -5,7 +5,7 @@ import time
 from functools import lru_cache
 
 # Global constants
-BACKGROUND_SIZE = (720, 1040)
+BACKGROUND_SIZE = (1080, 1920)
 
 # Initialize face detection tools once
 face_detector = dlib.get_frontal_face_detector()
@@ -92,7 +92,7 @@ def create_landmarks_mask(face, rect):
     
     # Polygon smoothing 
     mask = cv2.dilate(mask, SMOOTH_KERNEL)
-    mask = cv2.erode(mask, SMOOTH_KERNEL, iterations=2)
+    mask = cv2.erode(mask, SMOOTH_KERNEL, iterations=3)
     mask = cv2.dilate(mask, SMOOTH_KERNEL)
 
     return mask

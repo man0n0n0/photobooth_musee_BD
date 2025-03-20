@@ -1,0 +1,259 @@
+import cv2
+import dlib
+import numpy as np
+import time
+from functools import lru_cache
+
+# Global constants
+BACKGROUND_SIZE = (1080, 1920)
+
+# Initialize face detection tools once
+face_detector = dlib.get_frontal_face_detector()
+shape_predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")
+
+# Pre-compute common kernels
+SMOOTH_KERNEL = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
+FEATHER_KERNEL = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (9, 9))
+
+# Cache for background images
+background_cache = {}
+
+@lru_cache(maxsize=32)
+def get_cached_background(bg_path):
+    """Cache background images to avoid repeated disk I/O and resize operations"""
+    if bg_path not in background_cache:
+        bg_img = cv2.imread(bg_path)
+        if bg_img is not None:
+            background_cache[bg_path] = cv2.resize(bg_img, BACKGROUND_SIZE)
+    return background_cache.get(bg_path)
+
+def create_landmarks_mask(face, rect):
+    """
+    Create a mask for the face using facial landmarks with a rounded forehead.
+    
+    Args:
+        face (numpy.ndarray): The face image
+        rect (dlib.rectangle): The face rectangle from dlib
+    
+    Returns:
+        numpy.ndarray: A binary mask following the face contour
+    """
+    # Create an empty mask
+    h, w = face.shape[:2]
+    mask = np.zeros((h, w), dtype=np.uint8)
+    
+    # If no face rectangle provided, return an empty mask
+    if rect is None:
+        return mask
+    
+    # Get facial landmarks
+    shape = shape_predictor(face, rect)
+    points = np.zeros((shape.num_parts, 2), dtype=np.int32)
+    for i in range(shape.num_parts):
+        points[i] = [shape.part(i).x, shape.part(i).y]
+    
+    # Get jawline points
+    jawline = points[0:17]
+
+    # Simple approach: calculate the center top point of the forehead
+    left_temple = points[0]
+    right_temple = points[16]
+
+    # Calculate the width of the face at the temples
+    face_width = right_temple[0] - left_temple[0]
+
+    # Calculate the center point between temples
+    face_center = ((left_temple[0]+right_temple[0])//2,(left_temple[1]+right_temple[1])//2)
+
+    # Calculate forehead height (as proportion of face width)
+    forehead_height = int(face_width * 0.6)
+
+    # Calculate the angle 
+    delta_temple_y = right_temple[1] - left_temple[1]
+    face_angle = 90 - np.rad2deg(np.arctan(face_width/(delta_temple_y))) if delta_temple_y < 0 else 270 - abs(np.rad2deg(np.arctan(face_width/(delta_temple_y))))
+
+    # Create a full-resolution working mask for better anti-aliasing
+    hi_res_mask = np.zeros((h*2, w*2), dtype=np.uint8)
+    scaled_face_center = (face_center[0]*2, face_center[1]*2)
+    scaled_face_width = face_width * 2
+    scaled_forehead_height = forehead_height * 2
+    
+    # Draw higher resolution ellipse for smoother edges
+    cv2.ellipse(
+        hi_res_mask,
+        scaled_face_center,  # center point (at eyebrow level)
+        (scaled_face_width // 2, scaled_forehead_height),  # half width and height of ellipse
+        face_angle,  # angle
+        180, 0,  # start and end angles (half circle on top)
+        255, -1  # color and fill
+    )
+
+    # Create scaled jawline points
+    scaled_jawline = jawline * 2
+    
+    # Draw the extremum part of the polygon
+    cv2.polylines(hi_res_mask, [scaled_jawline], False, 255, 2)
+
+    # Fill the mask by connecting the jawline
+    # Create a closed contour including the jawline
+    contour = np.vstack([scaled_jawline])
+    
+    cv2.fillPoly(hi_res_mask, [contour], 255)
+    
+    # Apply Gaussian blur for anti-aliased edges (smoother transition)
+    hi_res_mask = cv2.GaussianBlur(hi_res_mask, (15, 15), 3)
+    
+    # Resize back to original dimensions with proper interpolation
+    mask = cv2.resize(hi_res_mask, (w, h), interpolation=cv2.INTER_LINEAR)
+    
+    # Apply mask refinement operations
+    # First create a binary mask for the core area (no feathering)
+    core_mask = cv2.threshold(mask, 200, 255, cv2.THRESH_BINARY)[1]
+    
+    # Dilate to expand slightly
+    core_mask = cv2.dilate(core_mask, SMOOTH_KERNEL, iterations=1)
+    
+    # Create a feathered edge by subtracting the core from a dilated version
+    dilated_mask = cv2.dilate(core_mask, FEATHER_KERNEL, iterations=3)
+    edge_mask = cv2.subtract(dilated_mask, core_mask)
+    
+    # Apply a gradient to the edge_mask for smooth transition
+    edge_mask = cv2.GaussianBlur(edge_mask, (9, 9), 2)
+    
+    # Combine the core and edge masks
+    mask = cv2.add(core_mask, edge_mask)
+    
+    return mask
+
+def detect_and_track_faces(frame, face_cascade, img_coordinate, background):
+    """Optimized face detection and tracking with landmark-based masking and smooth edges"""
+    # Get cached backgrounds
+    waiter = get_cached_background("background/waiting.jpg")
+    resized_background = cv2.resize(background, BACKGROUND_SIZE)
+    output = waiter
+    
+    # Optimize with a smaller scaling factor for detection
+    scale_factor = 1  # Reduced from 1.0 for faster processing
+    small_frame = cv2.resize(frame, (0, 0), fx=scale_factor, fy=scale_factor)
+    
+    # Convert to grayscale
+    gray = cv2.cvtColor(small_frame, cv2.COLOR_BGR2GRAY)
+    
+    # Use faster detection with reduced parameters
+    faces = face_cascade.detectMultiScale(
+        gray, 
+        scaleFactor=1.3,  # Increased from 1.2 for faster processing
+        minNeighbors=3,
+        minSize=(int(30 * scale_factor), int(30 * scale_factor)),
+        flags=cv2.CASCADE_SCALE_IMAGE
+    )
+    
+    # If no faces detected, return waiting image
+    if len(faces) == 0:
+        return frame, output, False
+    
+    # Select only the largest face for processing (optimization)
+    if len(faces) > 1:
+        face_areas = [w*h for (x,y,w,h) in faces]
+        largest_face_idx = np.argmax(face_areas)
+        faces = [faces[largest_face_idx]]
+    
+    try: 
+        # Process the selected face
+        for (x, y, w, h) in faces:
+            # Scale coordinates back to original frame size
+            x, y = int(x / scale_factor), int(y / scale_factor)
+            w, h = int(w / scale_factor), int(h / scale_factor)
+            
+            # Extend face region for forehead (pre-calculate extensions)
+            forehead_extension = int(h * 0.4)
+            width_extension = int(w * 0.20)
+            
+            # Calculate extended coordinates with bounds checking
+            y_extended = max(0, y - forehead_extension)
+            h_extended = min(frame.shape[0] - y_extended, h + forehead_extension + (y - y_extended))
+            
+            x_extended = max(0, x - width_extension)
+            w_extended = min(frame.shape[1] - x_extended, w + 2 * width_extension)
+            
+            # Extract face region with extended dimensions
+            face = frame[y_extended:y_extended+h_extended, x_extended:x_extended+w_extended]
+            if face.size == 0:
+                continue
+            
+            # Convert face to grayscale for dlib (reuse gray conversion)
+            gray_face = cv2.cvtColor(face, cv2.COLOR_BGR2GRAY)
+            
+            # Detect face with dlib - use faster detection
+            rect = None
+            dlib_faces = face_detector(gray_face, 0)  # 0 for faster detection
+
+            if dlib_faces:
+                face_detected = True
+
+                rect = dlib_faces[0]
+                
+                # Create mask with rounded forehead
+                face_mask = create_landmarks_mask(gray_face, rect)
+                
+                # Calculate output dimensions
+                target_height = int(resized_background.shape[0] * img_coordinate['face_ratio'])
+                aspect_ratio = w_extended / h_extended
+                target_width = int(target_height * aspect_ratio)
+                
+                # Use higher quality resize method for both face and mask
+                face_resized = cv2.resize(face, (target_width, target_height), interpolation=cv2.INTER_LANCZOS4)
+                
+                # Use INTER_LINEAR for the mask to maintain smooth edges
+                face_mask = cv2.resize(face_mask, (target_width, target_height), interpolation=cv2.INTER_LINEAR)
+                
+                # Apply additional Gaussian blur to smooth mask edges after resizing
+                face_mask = cv2.GaussianBlur(face_mask, (5, 5), 1.5)
+                
+                # Calculate placement (pre-compute multiplications)
+                bg_x = int(img_coordinate['x_faceplacement'] * resized_background.shape[1] - target_width // 2)
+                bg_y = int(img_coordinate['y_faceplacement'] * resized_background.shape[0] - target_height // 2)
+                
+                # Bounds checking
+                if (bg_x >= 0 and bg_y >= 0 and
+                    bg_x + target_width <= resized_background.shape[1] and
+                    bg_y + target_height <= resized_background.shape[0]):
+                    
+                    # Extract region from background
+                    region = resized_background[bg_y:bg_y+target_height, bg_x:bg_x+target_width].copy()
+                    
+                    # Optimize alpha blending with vectorized operations
+                    # Convert mask to float32 once and normalize
+                    alpha = face_mask.astype(np.float32) / 255.0
+                    
+                    # Expand dimensions for broadcasting
+                    alpha_3ch = np.expand_dims(alpha, axis=2)
+                    
+                    # Apply additional edge refinement for seamless blending
+                    # Create a slightly blurred copy of the face for edge transitions
+                    face_edges_blurred = cv2.GaussianBlur(face_resized, (3, 3), 0.8)
+                    
+                    # Use the blurred face for edge areas (where alpha is between 0.05 and 0.95)
+                    edge_mask = ((alpha_3ch > 0.05) & (alpha_3ch < 0.95))
+                    
+                    # Prepare the blended face (mix sharp interior with blurred edges)
+                    blended_face = face_resized.copy()
+                    blended_face[edge_mask.squeeze()] = face_edges_blurred[edge_mask.squeeze()]
+                    
+                    # Vectorized blending with refined face
+                    blended = cv2.convertScaleAbs(
+                        blended_face * alpha_3ch + region * (1.0 - alpha_3ch)
+                    )
+                    
+                    # Update output image efficiently
+                    output = resized_background.copy()
+                    output[bg_y:bg_y+target_height, bg_x:bg_x+target_width] = blended
+            
+            else : 
+                face_detected = False
+
+            return frame, output, face_detected
+
+    except Exception as e:
+        print(f"Error in face detection: {e}")
+        return frame, output, False  # return only background if error

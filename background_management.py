@@ -5,14 +5,14 @@ import random
 #  definir les references de placement des visages pour chaque image d'arrière plan (dans le dossier background)
 background_refs = {
     "join_the_team_full_hd-1.jpg" : {
-    "x_faceplacement" : 0.33,
-    "y_faceplacement" : 0.29,
-    "face_ratio" : 0.35
+    "x_faceplacement" : 0.32,
+    "y_faceplacement" : 0.28,
+    "face_ratio" : 0.32
     },
         "join_the_team_full_hd-2.jpg" : {
-    "x_faceplacement" : 0.548,
-    "y_faceplacement" : 0.22,
-    "face_ratio" : 0.31
+    "x_faceplacement" : 0.55,
+    "y_faceplacement" : 0.23,
+    "face_ratio" : 0.39
     },
         "join_the_team_full_hd-3.jpg" : {
     "x_faceplacement" : 0.50,

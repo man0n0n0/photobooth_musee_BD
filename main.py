@@ -8,6 +8,9 @@ from text_overlay import add_text_to_image  # Importer la fonction
 background_refresh_time = 5
 anti_strobe_wait = 0.5
 
+#os.system("ydotool mousemove 10 20")
+
+
 def main():
     """Fonction principale."""
     #  create neuronal face detection

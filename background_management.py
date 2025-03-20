@@ -10,9 +10,9 @@ background_refs = {
     "face_ratio" : 0.35
     },
         "join_the_team_full_hd-2.jpg" : {
-    "x_faceplacement" : 0.54,
+    "x_faceplacement" : 0.548,
     "y_faceplacement" : 0.22,
-    "face_ratio" : 0.35
+    "face_ratio" : 0.31
     },
         "join_the_team_full_hd-3.jpg" : {
     "x_faceplacement" : 0.50,

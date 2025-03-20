@@ -1,7 +1,6 @@
 import os
 import cv2
 import time
-import pyautogui
 from open_cv_process_optimized_smooth import detect_and_track_faces
 from background_management import get_random_background
 from text_overlay import add_text_to_image  # Importer la fonction
@@ -46,7 +45,7 @@ def main():
         cv2.namedWindow("result", cv2.WND_PROP_FULLSCREEN)
         cv2.setWindowProperty("result", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
         cv2.imshow("result", image)
-        pyautogui.moveTo(1910, 1070)
+        #pyautogui.moveTo(1910, 1070)
         #anti-strobbing
         next_frame_freeze = True if face_detected_on_previous and not face_detected else False
         face_detected_on_previous = face_detected

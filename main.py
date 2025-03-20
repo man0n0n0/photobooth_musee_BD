@@ -6,6 +6,7 @@ from background_management import get_random_background
 from text_overlay import add_text_to_image  # Importer la fonction
 
 background_refresh_time = 5
+anti_strobe_wait = 0.1
 
 
 def main():
@@ -28,7 +29,7 @@ def main():
     
     while True:
         if next_frame_freeze :
-            time.sleep(1)
+            time.sleep(anti_strobe_wait)
 
         ret, frame = cap.read()
 

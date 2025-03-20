@@ -6,8 +6,7 @@ from background_management import get_random_background
 from text_overlay import add_text_to_image  # Importer la fonction
 
 background_refresh_time = 5
-anti_strobe_wait = 0.1
-
+anti_strobe_wait = 0.5
 
 def main():
     """Fonction principale."""
@@ -49,7 +48,7 @@ def main():
         next_frame_freeze = True if face_detected_on_previous and not face_detected else False
         face_detected_on_previous = face_detected
 
-        if cv2.waitKey(50) & 0xFF == ord('q'):
+        if cv2.waitKey(10) & 0xFF == ord('q'):
             break
 
     cap.release()

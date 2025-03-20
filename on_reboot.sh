@@ -1,6 +1,6 @@
 #!/bin/bash
 export DISPLAY=:0
-export XAUTHORITY=/home/pibd/.Xauthority
+export XAUTHORITY=/home/pi-bd/.Xauthority
 xhost +SI:Localuser:pi-bd
 
 cd /home/pi-bd/Documents/photobooth_musee_bd

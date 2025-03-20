@@ -72,57 +72,30 @@ def create_landmarks_mask(face, rect):
     delta_temple_y = right_temple[1] - left_temple[1]
     face_angle = 90 - np.rad2deg(np.arctan(face_width/(delta_temple_y))) if delta_temple_y < 0 else 270 - abs(np.rad2deg(np.arctan(face_width/(delta_temple_y))))
 
-    # Create a full-resolution working mask for better anti-aliasing
-    hi_res_mask = np.zeros((h*2, w*2), dtype=np.uint8)
-    scaled_face_center = (face_center[0]*2, face_center[1]*2)
-    scaled_face_width = face_width * 2
-    scaled_forehead_height = forehead_height * 2
-    
-    # Draw higher resolution ellipse for smoother edges
+    # Create a simple arc for the forehead-half-ellipse spanning from left temple to right temple
     cv2.ellipse(
-        hi_res_mask,
-        scaled_face_center,  # center point (at eyebrow level)
-        (scaled_face_width // 2, scaled_forehead_height),  # half width and height of ellipse
+        mask,
+        face_center,  # center point (at eyebrow level)
+        (face_width // 2, forehead_height),  # half width and height of ellipse
         face_angle,  # angle
         180, 0,  # start and end angles (half circle on top)
         255, -1  # color and fill
     )
 
-    # Create scaled jawline points
-    scaled_jawline = jawline * 2
-    
     # Draw the extremum part of the polygon
-    cv2.polylines(hi_res_mask, [scaled_jawline], False, 255, 2)
+    cv2.polylines(mask, [jawline], False, 255, 2)
 
     # Fill the mask by connecting the jawline
     # Create a closed contour including the jawline
-    contour = np.vstack([scaled_jawline])
+    contour = np.vstack([jawline])
     
-    cv2.fillPoly(hi_res_mask, [contour], 255)
+    cv2.fillPoly(mask, [contour], 255)
     
-    # Apply Gaussian blur for anti-aliased edges (smoother transition)
-    hi_res_mask = cv2.GaussianBlur(hi_res_mask, (15, 15), 3)
-    
-    # Resize back to original dimensions with proper interpolation
-    mask = cv2.resize(hi_res_mask, (w, h), interpolation=cv2.INTER_LINEAR)
-    
-    # Apply mask refinement operations
-    # First create a binary mask for the core area (no feathering)
-    core_mask = cv2.threshold(mask, 200, 255, cv2.THRESH_BINARY)[1]
-    
-    # Dilate to expand slightly
-    core_mask = cv2.dilate(core_mask, SMOOTH_KERNEL, iterations=1)
-    
-    # Create a feathered edge by subtracting the core from a dilated version
-    dilated_mask = cv2.dilate(core_mask, FEATHER_KERNEL, iterations=3)
-    edge_mask = cv2.subtract(dilated_mask, core_mask)
-    
-    # Apply a gradient to the edge_mask for smooth transition
-    edge_mask = cv2.GaussianBlur(edge_mask, (9, 9), 2)
-    
-    # Combine the core and edge masks
-    mask = cv2.add(core_mask, edge_mask)
-    
+    # Polygon smoothing 
+    mask = cv2.dilate(mask, SMOOTH_KERNEL)
+    mask = cv2.erode(mask, SMOOTH_KERNEL, iterations=3)
+    mask = cv2.dilate(mask, SMOOTH_KERNEL)
+
     return mask
 
 def detect_and_track_faces(frame, face_cascade, img_coordinate, background):

@@ -3,7 +3,7 @@ import dlib
 import numpy as np
 import random
 
-background_size = (720, 1040)
+background_size = (1080, 1920)
 
 # Initialize these only once outside the functions
 face_detector = dlib.get_frontal_face_detector()

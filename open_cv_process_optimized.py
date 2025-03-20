@@ -105,7 +105,7 @@ def detect_and_track_faces(frame, face_cascade, img_coordinate, background):
     output = waiter
     
     # Optimize with a smaller scaling factor for detection
-    scale_factor = 0.5  # Reduced from 1.0 for faster processing
+    scale_factor = 1  # Reduced from 1.0 for faster processing
     small_frame = cv2.resize(frame, (0, 0), fx=scale_factor, fy=scale_factor)
     
     # Convert to grayscale

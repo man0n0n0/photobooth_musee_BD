@@ -31,6 +31,7 @@ def main():
             time.sleep(anti_strobe_wait)
 
         ret, frame = cap.read()
+        frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
 
         #background refreshing part
         if time.time() - start_t > background_refresh_time :

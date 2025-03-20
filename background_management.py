@@ -7,7 +7,7 @@ background_refs = {
     "join_the_team_full_hd-1.jpg" : {
     "x_faceplacement" : 0.33,
     "y_faceplacement" : 0.29,
-    "face_ratio" : 0.3
+    "face_ratio" : 0.37
     },
         "join_the_team_full_hd-2.jpg" : {
     "x_faceplacement" : 0.575,
@@ -27,7 +27,7 @@ background_refs = {
         "join_the_team_full_hd-5.jpg" : {
     "x_faceplacement" : 0.45,
     "y_faceplacement" : 0.15,
-    "face_ratio" : 0.3
+    "face_ratio" : 0.4
     },
 
     "waiting.jpg" : {
